@@ -1,0 +1,18 @@
+FROM ubuntu:18.04
+
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get update && apt-get install -y wget gpgv1 xz-utils make
+RUN apt-get update && apt-get install -y libxml2
+
+RUN wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb
+RUN dpkg -i devkitpro-pacman.deb
+RUN rm -f devkitpro-pacman.deb
+
+RUN dkp-pacman -Sy
+RUN echo "\ny" | dkp-pacman -S wii-dev
+
+RUN mkdir /home/__USER__
+ADD .profile /bome/__USER__/.profile
+ADD .bashrc /home/__USER__/.bashrc
+
+ENV PATH=/opt/devkitpro/devkitPPC/bin:$PATH
