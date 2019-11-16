@@ -13,30 +13,20 @@ CALL_SITE_BIN = "call-site.bin"
 NACE_PATCH = "NACE_base_patch.gzi"
 
 
-def read_in_mapping_func(deadzone, extents):
-    with open(os.path.join(BINARIES_DIRECTORY, MAPPING_FUNC_BIN), 'rb') as mb:
-        mapping_bin = bytearray(mb.read())
+def read_binary_file(path):
+    with open(path, 'rb') as b:
+        return bytearray(b.read())
 
-        mapping_bin[48:56] = struct.pack('>d', extents['right'])
-        mapping_bin[56:64] = struct.pack('>d', extents['left'])
-        mapping_bin[64:72] = struct.pack('>d', extents['up'])
-        mapping_bin[72:80] = struct.pack('>d', extents['down'])
-        mapping_bin[80:88] = struct.pack('>d', deadzone)
+def read_text_file(path):
+    with open(path, 'r+') as t:
+        return t.read()
 
-        return mapping_bin
-
-
-def read_in_call_site_hook():
-    with open(os.path.join(BINARIES_DIRECTORY, CALL_SITE_BIN), 'rb') as cs:
-        call_site_bin = bytearray(cs.read())
-        return call_site_bin
-
-
-def read_in_base_patch():
-    with open(os.path.join(PATCH_DIRECTORY, NACE_PATCH), 'r+') as bp:
-        patch_text = bp.read()
-        return patch_text
-
+def inject_options_to_mapping_func(binary, deadzone, extents):
+    binary[48:56] = struct.pack('>d', extents['right'])
+    binary[56:64] = struct.pack('>d', extents['left'])
+    binary[64:72] = struct.pack('>d', extents['up'])
+    binary[72:80] = struct.pack('>d', extents['down'])
+    binary[88:96] = struct.pack('>d', deadzone)
 
 def generate_gzi_section(offset, data):
     assert len(data) % 4 == 0
@@ -55,10 +45,9 @@ def generate_gzi_section(offset, data):
 
     return section_text.strip()
 
-
-def write_final_patch(patch_text):
-    with open('stick-patch.gzi', 'w+') as sp:
-        sp.write(patch_text)
+def write_text_file(text, path):
+    with open(path, 'w+') as sp:
+        sp.write(text)
 
 
 def main():
@@ -113,12 +102,12 @@ def main():
                         "separated by commas to set each direction individually (default 106)")
     args = parser.parse_args()
 
-    patch = read_in_base_patch()
+    patch = read_text_file(os.path.join(PATCH_DIRECTORY, NACE_PATCH))
 
-    mapping_bin = read_in_mapping_func(
-        deadzone=args.deadzone, extents=args.extents)
+    mapping_bin = read_binary_file(os.path.join(BINARIES_DIRECTORY, MAPPING_FUNC_BIN))
+    call_site_bin = read_binary_file(os.path.join(BINARIES_DIRECTORY, CALL_SITE_BIN))
 
-    call_site_bin = read_in_call_site_hook()
+    inject_options_to_mapping_func(mapping_bin, deadzone=args.deadzone, extents=args.extents)
 
     mapping_patch_text = generate_gzi_section(0x1e00, mapping_bin)
     call_site_patch_text = generate_gzi_section(0x5e028, call_site_bin)
@@ -126,6 +115,6 @@ def main():
     patch = patch.replace('__MAPPING_FUNCTION_PATCH__', mapping_patch_text)
     patch = patch.replace('__CALL_SITE_PATCH__', call_site_patch_text)
 
-    write_final_patch(patch)
+    write_text_file(patch, 'stick-patch.gzi')
 
 main()
