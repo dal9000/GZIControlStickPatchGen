@@ -8,7 +8,8 @@ stw %r0, 0x4c(%r1)
 lfd %f2, 0x48(%r1)
 fsubs %f2, %f2, %f25
 
-bl -0x5CD28
+# Branch will go here
+.long 0x00000000
 
 fctiw %f0, %f1
 stfd %f0, 0x78(%r1)
