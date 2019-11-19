@@ -29,7 +29,7 @@ optional arguments:
                         patch.gzi)
 ```
 
-### Additonal Examples
+### Additional Examples
 
 `./generate.py -r na --deadzone 4`  
 `./generate.py -r jp --deadzone 2 --extents 110`  
