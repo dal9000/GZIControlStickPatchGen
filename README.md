@@ -1,6 +1,6 @@
 # GZIControlStickPatchGen
 
-A small script for generating GZI patch files that replace the default control stick mapping in the Wii VC versions of Ocarina of Time with one that more closely matches the feel of the N64 version of the game. 
+A small script for generating GZI patch files for use with [gzinject](https://github.com/krimtonz/gzinject) that replace the default control stick mapping in the Wii VC versions of Ocarina of Time with one that more closely matches the feel of the N64 version of the game. 
 
 Please note that this is completely illegal for all speed runs and is intended for either new speedrunners who are learning and don't yet have access to an ESS adapter or for randomizer players who want to play on VC in glorious 480p without having annoying control issues.
 
