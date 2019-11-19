@@ -127,19 +127,23 @@ def parse_cmd_arguments():
                 'Stick extents values must be positive integers')
 
     parser = argparse.ArgumentParser()
+    parser._action_groups.pop()
 
-    parser.add_argument('-r', '--region', type=str, choices=['na', 'jp', 'eu'],
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-r', '--region', type=str, choices=['na', 'jp', 'eu'],
                         help="Region of the targeted WAD", required=True)
 
-    parser.add_argument('-d', '--deadzone', type=deadzone, default=0,
+    optional = parser.add_argument_group('optional arguments')
+
+    optional.add_argument('-d', '--deadzone', type=deadzone, default=0,
                         help="Radius of the control stick deadzone (default: 0)",)
 
-    parser.add_argument('-e', '--extents', type=stick_extents, default={'right': 106.0, 'left': 106.0, 'up': 106.0, 'down': 106.0},
+    optional.add_argument('-e', '--extents', type=stick_extents, default={'right': 106.0, 'left': 106.0, 'up': 106.0, 'down': 106.0},
                         help="Maximum control stick value in each direction." +
                         "Specify 1 value to set all directions together or 4 values (right, left, up, down) " +
                         "separated by commas to set each direction individually (default: 106)")
 
-    parser.add_argument('-o', '--output-file', type=str, default='stick-patch.gzi',
+    optional.add_argument('-o', '--output-file', type=str, default='stick-patch.gzi',
                         help="Name of the output patch file (default: stick-patch.gzi)")
 
     return parser.parse_args()
