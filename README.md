@@ -17,13 +17,16 @@ required arguments:
                         Region of the targeted WAD
 
 optional arguments:
+  -1, --one-to-one      Disable mapping altogether and pass control stick
+                        values through unmodified. Useful for finding the
+                        extents a controller
   -d DEADZONE, --deadzone DEADZONE
                         Radius of the control stick deadzone (default: 0)
   -e EXTENTS, --extents EXTENTS
                         Maximum control stick value in each direction.Specify
                         1 value to set all directions together or 4 values
                         (right, left, up, down) separated by commas to set
-                        each direction individually (default: 106)
+                        each direction individually (default: 100)
   -o OUTPUT_FILE, --output-file OUTPUT_FILE
                         Name of the output patch file (default: stick-
                         patch.gzi)
@@ -54,4 +57,4 @@ Contains the `asm` files for the patch to the stick mapping call site and the ac
 
 ### Scripts Directory
 
-Contains the python script `gc-n64.py` which is an example implementation in python of the stick mapping function which can be used to test changes before writing them in assembly.
+Contains the python script `gc_to_n64.py` which is an example implementation in python of the stick mapping function which can be used to test changes before writing them in assembly.
