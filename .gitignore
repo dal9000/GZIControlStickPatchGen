@@ -2,3 +2,4 @@
 assembly/*.bin
 assembly/*.o
 
+__pycache__

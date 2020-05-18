@@ -138,6 +138,12 @@ fdivs %f5, %f8, %f7
 # dist_sq in f6 (intersect_y no longer needed)
 fmuls %f3, %f3, %f3
 fmadds %f6, %f4, %f4, %f3
+
+# Scale the scale factor
+fsubs %f5, %f5, %f29
+fmadds %f5, %f5, %f6, %f29
+
+# Apply the scaled scale factor
 fmuls %f6, %f6, %f5
 
 # new_x in f3
