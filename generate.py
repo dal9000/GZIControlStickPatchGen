@@ -20,11 +20,21 @@ NACP_CALL_SITE_OFFSET = 0x5e068
 
 MAPPING_FUNC_OFFSET = 0x1e00
 
+MAPPING_FUNCTION_GC_STICK_CONSTANTS_OFFSET = 48
+MAPPING_FUNCTION_DEADZONE_CONSTANT_OFFSET = 88
+
+# Offset to the first intruction in the mapping function binary
+MAPPING_FUNC_START_OFFSET = 96
+
 INTERRUPT_SECTION_OFFSET = 0x100
 INTERRUPT_SECTION_ADDRESS = 0x80004000
 PROGRAM_SECTION_OFFSET = 0x25E0
 PROGRAM_SECTION_ADDRESS = 0x80007020
 
+# Offset to the branch instruction in the call site binary
+CALL_SITE_BRANCH_INSTRUCTION_OFFSET = 32
+
+NOOP_INSTRUCTION = 0x60000000
 
 def read_binary_file(path):
     with open(path, 'rb') as b:
@@ -46,16 +56,21 @@ def encode_bl_instruction(branch_offset):
 
 
 def inject_options_to_mapping_func(binary, deadzone, extents):
-    binary[48:56] = struct.pack('>d', float(extents['right']))
-    binary[56:64] = struct.pack('>d', float(extents['left']))
-    binary[64:72] = struct.pack('>d', float(extents['up']))
-    binary[72:80] = struct.pack('>d', float(extents['down']))
-    binary[88:96] = struct.pack('>d', float(deadzone))
+    gc_extents_off = MAPPING_FUNCTION_GC_STICK_CONSTANTS_OFFSET
+
+    binary[gc_extents_off:gc_extents_off + 8] = struct.pack('>d', float(extents['right']))
+    binary[gc_extents_off + 8:gc_extents_off + 16] = struct.pack('>d', float(extents['left']))
+    binary[gc_extents_off + 16:gc_extents_off + 24] = struct.pack('>d', float(extents['up']))
+    binary[gc_extents_off + 24:gc_extents_off + 32] = struct.pack('>d', float(extents['down']))
+
+    deadzone_off = MAPPING_FUNCTION_DEADZONE_CONSTANT_OFFSET
+    # Saves some instructions if we inject the square of the deadzone
+    binary[deadzone_off:deadzone_off + 8] = struct.pack('>d', float(deadzone*deadzone))
 
 
 def inject_branch_to_call_site(binary, call_site_offset):
-    bl_inst_offset = 32
-    mapping_func_start_offset = 96
+    bl_inst_offset = CALL_SITE_BRANCH_INSTRUCTION_OFFSET
+    mapping_func_start_offset = MAPPING_FUNC_START_OFFSET
 
     mapping_func_raw_address = INTERRUPT_SECTION_ADDRESS + \
         MAPPING_FUNC_OFFSET - INTERRUPT_SECTION_OFFSET
@@ -69,6 +84,11 @@ def inject_branch_to_call_site(binary, call_site_offset):
     bl_inst = encode_bl_instruction(-bl_distance)
 
     binary[bl_inst_offset:bl_inst_offset + 4] = struct.pack('>I', bl_inst)
+
+
+def inject_noop_to_call_site(binary):
+    noop_inst_offset = CALL_SITE_BRANCH_INSTRUCTION_OFFSET
+    binary[noop_inst_offset:noop_inst_offset + 4] = struct.pack('>I', NOOP_INSTRUCTION)
 
 
 def generate_gzi_section(offset, data):
@@ -135,13 +155,18 @@ def parse_cmd_arguments():
 
     optional = parser.add_argument_group('optional arguments')
 
-    optional.add_argument('-d', '--deadzone', type=deadzone, default=0,
-                        help="Radius of the control stick deadzone (default: 0)",)
+    optional.add_argument('-1', '--one-to-one', action='store_true',
+                        help="Disable mapping altogether and pass control stick values through unmodified. " +
+                        "Useful for finding the extents a controller")
 
-    optional.add_argument('-e', '--extents', type=stick_extents, default={'right': 106.0, 'left': 106.0, 'up': 106.0, 'down': 106.0},
+    optional.add_argument('-d', '--deadzone', type=deadzone, default=0,
+                        help="Radius of the control stick deadzone (default: 0) " +
+                        "This deadzone is applied to the GC inputs, before any mapping is done")
+
+    optional.add_argument('-e', '--extents', type=stick_extents, default={'right': 100.0, 'left': 100.0, 'up': 100.0, 'down': 100.0},
                         help="Maximum control stick value in each direction." +
                         "Specify 1 value to set all directions together or 4 values (right, left, up, down) " +
-                        "separated by commas to set each direction individually (default: 106)")
+                        "separated by commas to set each direction individually (default: 100)")
 
     optional.add_argument('-o', '--output-file', type=str, default='stick-patch.gzi',
                         help="Name of the output patch file (default: stick-patch.gzi)")
@@ -180,9 +205,13 @@ def main():
     inject_options_to_mapping_func(
         mapping_bin, deadzone=args.deadzone, extents=args.extents)
 
-    # Inject the correct branch instruction to jump to the mapping function
-    inject_branch_to_call_site(
-        call_site_bin, call_site_offset=call_site_offset)
+    if args.one_to_one:
+        # Inject a noop where the branch should go to disable mapping
+        inject_noop_to_call_site(call_site_bin)
+    else:
+        # Inject the correct branch instruction to jump to the mapping function
+        inject_branch_to_call_site(
+            call_site_bin, call_site_offset=call_site_offset)
 
     # Generate the GZI text for both sections
     mapping_patch = generate_gzi_section(MAPPING_FUNC_OFFSET, mapping_bin)

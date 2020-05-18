@@ -44,17 +44,13 @@ lfd %f31, 0x58(%r3)
 
 # Apply Custom Deadzone
 
-fabs %f3, %f1
+fmuls %f3, %f1, %f1
+fmadds %f3, %f2, %f2, %f3
 fcmpo %cr0, %f3, %f31
-bgt %cr0, xdeadzone
-fmuls %f1, %f1, %f0
-xdeadzone:
-
-fabs %f3, %f2
-fcmpo %cr0, %f3, %f31
-bgt %cr0, ydeadzone
-fmuls %f2, %f2, %f0
-ydeadzone:
+bgt %cr0, deadzone
+fmr %f1, %f0
+fmr %f2, %f0
+deadzone:
 
 # Normalize inputs
 
