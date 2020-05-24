@@ -2,14 +2,14 @@
 
 A small script for generating GZI patch files for use with [gzinject](https://github.com/krimtonz/gzinject) that replace the default control stick mapping in the Wii VC versions of Ocarina of Time with one that more closely matches the feel of the N64 version of the game. 
 
-Please note that this is completely illegal for all speed runs and is intended for either new speedrunners who are learning and don't yet have access to an ESS adapter or for randomizer players who want to play on VC in glorious 480p without having annoying control issues.
+Please note that this is completely illegal for all speed runs and is intended for either new speedrunners who are learning and don't yet have access to an ESS adapter or for randomizer players who want to play on VC without having annoying control issues.
 
 ## Usage
 
 For most users the only important part of this repository is the `generate.py` script. It has a number of options as detailed below, but at its most basic it simply needs to be given the region of the WAD it is patching. For example `./generate.py -r na` will generate a GZI patch file that works with the North American WAD version (NACE), while `./generate.py -r jp` will generate a patch that works with the Japanese WAD (NACJ).
 
 ```
-usage: generate.py [-h] -r {na,jp,eu} [-d DEADZONE] [-e EXTENTS]
+usage: generate.py [-h] -r {na,jp,eu} [-1] [-d DEADZONE] [-e EXTENTS]
                    [-o OUTPUT_FILE]
 
 required arguments:
